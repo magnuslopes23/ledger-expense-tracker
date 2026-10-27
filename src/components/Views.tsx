@@ -1,0 +1,6 @@
+export { DashboardView } from './views/DashboardView'
+export { TransactionsView } from './views/TransactionsView'
+export { AccountsView } from './views/AccountsView'
+export { BudgetsView } from './views/BudgetsView'
+export { RecurringView } from './views/RecurringView'
+export { SettingsView } from './views/SettingsView'
