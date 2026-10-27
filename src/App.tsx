@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { AuthScreen } from './components/AuthScreen'
+import { AuthScreen, ResetPasswordScreen } from './components/AuthScreen'
 import { Icon } from './components/Icon'
 import { AccountsView, BudgetsView, DashboardView, RecurringView, SettingsView, TransactionsView } from './components/Views'
 import { createCloudRepository, createLocalRepository, type LedgerRepository } from './lib/repository'
@@ -29,11 +29,15 @@ export default function App() {
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{message:string;kind:'success'|'error'}|null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [recoveryMode, setRecoveryMode] = useState(() => window.location.hash.includes('type=recovery'))
 
   useEffect(() => {
     if (!supabaseConfigured || !supabase) { setAuthLoading(false); return }
     supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setAuthLoading(false) })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session)
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
+    })
     return () => listener.subscription.unsubscribe()
   }, [])
 
@@ -60,6 +64,7 @@ export default function App() {
   async function signOut() { if (supabase) await supabase.auth.signOut() }
 
   if (authLoading) return <LoadingScreen label="Checking session…"/>
+  if (supabaseConfigured && recoveryMode) return <ResetPasswordScreen onComplete={() => setRecoveryMode(false)}/>
   if (supabaseConfigured && !session) return <AuthScreen/>
   if (!repo) return <LoadingScreen label="Preparing Ledger…"/>
 
