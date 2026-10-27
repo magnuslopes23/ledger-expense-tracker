@@ -16,7 +16,7 @@ export function AuthScreen() {
     setBusy(true); setError(''); setMessage('')
     const result = mode === 'signin'
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password })
+      : await supabase.auth.signUp({\n          email,\n          password,\n          options: { emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },\n        })
     setBusy(false)
     if (result.error) setError(result.error.message)
     else if (mode === 'signup' && !result.data.session) setMessage('Account created. Check your email to confirm the address, then sign in.')
