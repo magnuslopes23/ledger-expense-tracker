@@ -29,6 +29,7 @@ export default function App() {
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{message:string;kind:'success'|'error'}|null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [composeToken, setComposeToken] = useState(0)
   const [recoveryMode, setRecoveryMode] = useState(() => window.location.hash.includes('type=recovery'))
 
   useEffect(() => {
@@ -79,12 +80,20 @@ export default function App() {
       {menuOpen&&<button className="fixed inset-0 z-30 bg-slate-950/20 lg:hidden" onClick={()=>setMenuOpen(false)} aria-label="Close menu"/>}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur lg:hidden"><button className="icon-button" onClick={()=>setMenuOpen(true)}><Icon name="menu"/></button><div className="font-semibold">Ledger</div><div className="w-9"/></header>
+        <header className="mobile-app-header lg:hidden">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[.18em] text-slate-400">Ledger</div>
+            <div className="text-[17px] font-semibold tracking-tight text-slate-950">{nav.find(n=>n.key===view)?.label ?? 'Ledger'}</div>
+          </div>
+          <button className="mobile-avatar" onClick={()=>setView('settings')} aria-label="Open settings">
+            {(session?.user.email?.[0] ?? 'L').toUpperCase()}
+          </button>
+        </header>
         <main className="mx-auto max-w-[1500px] px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
           {error && <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><div className="font-semibold">Could not load data</div><div className="mt-1">{error}</div><button className="mt-3 text-xs font-semibold underline" onClick={()=>refresh()}>Try again</button></div>}
           {loading ? <div className="grid min-h-[50vh] place-items-center"><div className="text-sm text-slate-400">Loading records…</div></div> : <>
             {view==='dashboard'&&<DashboardView {...common} month={month} setMonth={setMonth}/>} 
-            {view==='transactions'&&<TransactionsView {...common} month={month} setMonth={setMonth}/>} 
+            {view==='transactions'&&<TransactionsView {...common} month={month} setMonth={setMonth} composeToken={composeToken}/>}  
             {view==='accounts'&&<AccountsView {...common}/>} 
             {view==='budgets'&&<BudgetsView {...common} month={month} setMonth={setMonth}/>} 
             {view==='recurring'&&<RecurringView {...common}/>} 
@@ -93,7 +102,13 @@ export default function App() {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-slate-200 bg-white/95 px-1 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur lg:hidden">{nav.map(item=><button key={item.key} className={`mobile-nav ${view===item.key?'text-slate-950':'text-slate-400'}`} onClick={()=>setView(item.key)}><Icon name={item.icon} size={19}/><span>{item.label==='Transactions'?'Activity':item.label}</span></button>)}</nav>
+      <nav className="mobile-dock lg:hidden">
+        <button className={`mobile-dock-item ${view==='dashboard'?'mobile-dock-active':''}`} onClick={()=>setView('dashboard')}><Icon name="dashboard" size={20}/><span>Home</span></button>
+        <button className={`mobile-dock-item ${view==='transactions'?'mobile-dock-active':''}`} onClick={()=>setView('transactions')}><Icon name="transactions" size={20}/><span>Activity</span></button>
+        <button className="mobile-add" onClick={()=>{setView('transactions');setComposeToken(v=>v+1)}} aria-label="Add transaction"><Icon name="plus" size={24}/></button>
+        <button className={`mobile-dock-item ${view==='budgets'?'mobile-dock-active':''}`} onClick={()=>setView('budgets')}><Icon name="budgets" size={20}/><span>Budget</span></button>
+        <button className={`mobile-dock-item ${['accounts','recurring','settings'].includes(view)?'mobile-dock-active':''}`} onClick={()=>setMenuOpen(true)}><Icon name="menu" size={20}/><span>More</span></button>
+      </nav>
       {toast&&<div className={`fixed bottom-24 left-1/2 z-[70] -translate-x-1/2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-xl lg:bottom-6 ${toast.kind==='error'?'bg-rose-700':'bg-slate-950'}`}>{toast.message}</div>}
     </div>
   )
